@@ -1,1 +1,1 @@
-![time tracker 1](https://github.com/user-attachments/assets/577a49bc-0786-4c92-a1a5-931418d409ea)
+![time tracker 1](https://github.com/user-attachments/assets/ab89a287-aadf-400a-9b3f-9a4022e3c25e)
