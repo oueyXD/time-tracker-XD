@@ -2,19 +2,13 @@ let activeDomain = null;
 let lastUpdate = null;
 let totalTime = {};
 
-function formatTime(ms) {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes} min ${remainingSeconds} sec`;
-}
-
 function updateTimeSpent(domain, timeSpentMs) {
     if (!domain || timeSpentMs <= 0) return;
     totalTime[domain] = (totalTime[domain] || 0) + timeSpentMs;
 
-    chrome.storage.local.set({ totalTime }, () => {
+    chrome.storage.local.set({totalTime}, () => {
         console.log(`Updated time for ${domain}: ${formatTime(totalTime[domain])}`);
+        console.log("Current total time:", totalTime); // DEBUG!!!!!!!!!!!!!!!!!!!!!!!!!!
     });
 }
 
@@ -33,6 +27,8 @@ function handleActiveTabChange() {
 
         activeDomain = domain;
         lastUpdate = currentTime;
+
+        console.log(`Active domain: ${activeDomain}, Time: ${new Date(lastUpdate)}`); // DEBUG!!!!!!!!!!!!!!
     });
 }
 
@@ -84,7 +80,7 @@ function updateTimeSpent(domain, timeSpentMs) {
         chrome.storage.local.set({ totalTime }, () => {
             const formattedTime = formatTime(totalTime[domain]);
             console.log(`Updated time for ${domain}: ${formattedTime}`);
-            console.log(totalTime); // Add this line to check stored values
+            console.log(totalTime); // debug!!!!!!!!!!!!!!!!!!!!!
         });
     }
 }

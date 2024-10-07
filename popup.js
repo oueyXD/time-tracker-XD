@@ -1,6 +1,8 @@
 function updatePopup() {
-    chrome.storage.local.get([STORAGE_KEY_TOTAL_TIME], (result) => {
-        const totalTime = result[STORAGE_KEY_TOTAL_TIME] || {};
+    console.log("popup.js is loaded"); // debug!!!!!!!!
+
+    chrome.storage.local.get(['totalTime'], (result) => {
+        const totalTime = result['totalTime'] || {};
         const timeList = document.getElementById('time-list');
 
         if (!timeList) {
@@ -25,3 +27,13 @@ function updatePopup() {
         }
     });
 }
+
+// test from background.js function
+function formatTime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes} min ${remainingSeconds} sec`;
+}
+
+document.addEventListener('DOMContentLoaded', updatePopup);
