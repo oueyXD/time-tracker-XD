@@ -1,6 +1,5 @@
-// Function to update the popup with time spent data
 function updatePopup() {
-    console.log("popup.js is loaded"); // Debugging log
+    console.log("popup.js is loaded");
 
     chrome.storage.local.get(['totalTime', 'dailyTime'], (result) => {
         const totalTime = result['totalTime'] || {};
@@ -13,11 +12,9 @@ function updatePopup() {
             return;
         }
 
-        // Clear the list items before appending new data
         timeList.innerHTML = '';
         dailyList.innerHTML = '';
 
-        // Handle Total Time
         if (Object.keys(totalTime).length === 0) {
             const listItem = document.createElement('li');
             listItem.textContent = 'No total time recorded yet.';
@@ -33,7 +30,6 @@ function updatePopup() {
             }
         }
 
-        // Handle Daily Time
         if (Object.keys(dailyTime).length === 0) {
             const listItem = document.createElement('li');
             listItem.textContent = 'No daily time recorded yet.';
@@ -51,7 +47,6 @@ function updatePopup() {
     });
 }
 
-// Function to format time from milliseconds to minutes and seconds
 function formatTime(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -59,5 +54,4 @@ function formatTime(ms) {
     return `${minutes} min ${seconds} sec`;
 }
 
-// Trigger the popup update when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', updatePopup);

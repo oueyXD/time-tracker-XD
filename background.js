@@ -4,14 +4,12 @@ let totalTime = {};
 let dailyTime = {};
 let lastSavedDate = null;
 
-// Load the saved total and daily time when the extension starts
 chrome.storage.local.get(['totalTime', 'dailyTime', 'lastSavedDate'], (data) => {
     if (data.totalTime) totalTime = data.totalTime;
     if (data.dailyTime) dailyTime = data.dailyTime;
     if (data.lastSavedDate) lastSavedDate = new Date(data.lastSavedDate);
 });
 
-// Format time in HH:MM:SS
 function formatTime(ms) {
     let totalSeconds = Math.floor(ms / 1000);
     let hours = Math.floor(totalSeconds / 3600);
@@ -20,7 +18,6 @@ function formatTime(ms) {
     return `${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Reset daily time if the day has changed
 function resetDailyTimeIfNeeded() {
     const currentDate = new Date();
     if (!lastSavedDate || currentDate.toDateString() !== lastSavedDate.toDateString()) {
@@ -30,7 +27,6 @@ function resetDailyTimeIfNeeded() {
     }
 }
 
-// Update time spent on the website (both total and daily)
 function updateTimeSpent(domain, timeSpentMs) {
     if (!domain || timeSpentMs <= 0) return;
 
@@ -75,7 +71,6 @@ function handleAudibleTabs() {
     });
 }
 
-// Handle when a tab or window changes focus
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' || tab.audible) {
         handleActiveTabChange();
@@ -95,7 +90,6 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
     }
 });
 
-// Interval to check audible tabs and reset daily time if needed
 setInterval(() => {
     resetDailyTimeIfNeeded();
 
