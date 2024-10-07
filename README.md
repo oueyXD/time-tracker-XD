@@ -1,2 +1,2 @@
-# Sascha's Time Tracker
+# oueyXD's Time Tracker
 ## It tracks time!
