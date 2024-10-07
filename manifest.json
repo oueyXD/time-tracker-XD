@@ -1,20 +1,18 @@
 {
-  "manifest_version": 3,
-  "name": "Time Tracker XD",
-  "version": "1.0",
-  "description": "Track time spent on websites.",
-  "permissions": [
-    "tabs",
-    "storage"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Time Tracker XD"
-  },
-  "host_permissions": [
-    "*://*/*"
-  ]
-}
+    "manifest_version": 3,
+    "name": "Time Tracker XD",
+    "version": "1.0",
+    "description": "Tracks time spent on websites!",
+    "permissions": [
+      "activeTab",
+      "tabs",
+      "storage"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    }
+  }
+  
