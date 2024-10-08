@@ -1,104 +1,80 @@
 let activeDomain = null;
-let lastUpdate = null;
+let lastUpdate = Date.now();
 let totalTime = {};
 let dailyTime = {};
-let lastSavedDate = null;
+let dailyStart = {};
 
-chrome.storage.local.get(['totalTime', 'dailyTime', 'lastSavedDate'], (data) => {
-    if (data.totalTime) totalTime = data.totalTime;
-    if (data.dailyTime) dailyTime = data.dailyTime;
-    if (data.lastSavedDate) lastSavedDate = new Date(data.lastSavedDate);
+// Initialize storage on startup
+chrome.runtime.onStartup.addListener(() => {
+    chrome.storage.local.get(['totalTime', 'dailyTime'], (result) => {
+        totalTime = result.totalTime || {}; // Load total time
+        dailyTime = result.dailyTime || {};   // Load daily time
+    });
 });
 
-function formatTime(ms) {
-    let totalSeconds = Math.floor(ms / 1000);
-    let hours = Math.floor(totalSeconds / 3600);
-    let minutes = Math.floor((totalSeconds % 3600) / 60);
-    let seconds = totalSeconds % 60;
-    return `${hours}h ${minutes}m ${seconds}s`;
-}
-
+// Update the daily time if needed
 function resetDailyTimeIfNeeded() {
-    const currentDate = new Date();
-    if (!lastSavedDate || currentDate.toDateString() !== lastSavedDate.toDateString()) {
-        dailyTime = {}; // Reset daily time
-        lastSavedDate = currentDate;
-        chrome.storage.local.set({ dailyTime, lastSavedDate });
-    }
+    const currentDate = new Date().toDateString();
+    chrome.storage.local.get(['dailyStartDate'], (result) => {
+        if (result.dailyStartDate !== currentDate) {
+            dailyTime = {}; // Reset daily time for a new day
+            chrome.storage.local.set({ dailyTime, dailyStartDate: currentDate }); // Save new daily time
+        }
+    });
 }
 
+// Format time in a readable format
+function formatTime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes} min ${remainingSeconds} sec`;
+}
+
+// Update time spent for the given domain
 function updateTimeSpent(domain, timeSpentMs) {
     if (!domain || timeSpentMs <= 0) return;
 
+    // Update total time
     totalTime[domain] = (totalTime[domain] || 0) + timeSpentMs;
+
+    // Update daily time
     dailyTime[domain] = (dailyTime[domain] || 0) + timeSpentMs;
 
+    // Save to storage
     chrome.storage.local.set({ totalTime, dailyTime }, () => {
-        console.log(`Updated time for ${domain}: Total - ${formatTime(totalTime[domain])}, Daily - ${formatTime(dailyTime[domain])}`);
+        console.log(`Updated time for ${domain}: Total: ${formatTime(totalTime[domain])}, Daily: ${formatTime(dailyTime[domain])}`);
     });
 }
 
-function handleActiveTabChange() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs.length === 0 || !tabs[0].url) return;
-
-        const currentTab = tabs[0];
-        const domain = new URL(currentTab.url).hostname;
-        const currentTime = Date.now();
-
-        if (activeDomain && lastUpdate) {
-            const timeSpentMs = currentTime - lastUpdate;
-            updateTimeSpent(activeDomain, timeSpentMs);
-        }
-
-        activeDomain = domain;
-        lastUpdate = currentTime;
-
-        console.log(`Active domain: ${activeDomain}, Time: ${new Date(lastUpdate)}`);
-    });
-}
-
-function handleAudibleTabs() {
+// Track time for all active and audible tabs
+function handleTabs() {
     const currentTime = Date.now();
-    chrome.tabs.query({ audible: true }, (tabs) => {
+
+    // Query all tabs to track time
+    chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
-            const domain = new URL(tab.url).hostname;
-            if (lastUpdate) {
-                const timeSpentMs = currentTime - lastUpdate;
-                updateTimeSpent(domain, timeSpentMs);
+            const url = tab.url || '';
+            // Skip internal Chrome pages
+            if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) return;
+
+            const domain = new URL(url).hostname.replace(/^www\./, '').split('.')[0]; // Clean domain name
+
+            // Check if the tab is audible or active
+            if (tab.audible || tab.active) {
+                if (activeDomain && lastUpdate) {
+                    const timeSpentMs = currentTime - lastUpdate;
+                    updateTimeSpent(activeDomain, timeSpentMs);
+                }
+                activeDomain = domain; // Update active domain
             }
         });
+        lastUpdate = currentTime; // Update lastUpdate after checking all tabs
     });
 }
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' || tab.audible) {
-        handleActiveTabChange();
-    }
-});
-
-chrome.tabs.onActivated.addListener(handleActiveTabChange);
-chrome.windows.onFocusChanged.addListener((windowId) => {
-    if (windowId === chrome.windows.WINDOW_ID_NONE && activeDomain) {
-        const currentTime = Date.now();
-        const timeSpentMs = currentTime - lastUpdate;
-        updateTimeSpent(activeDomain, timeSpentMs);
-        activeDomain = null;
-        lastUpdate = null;
-    } else {
-        handleActiveTabChange();
-    }
-});
-
+// Update every second
 setInterval(() => {
     resetDailyTimeIfNeeded();
-
-    if (activeDomain && lastUpdate) {
-        const currentTime = Date.now();
-        const timeSpentMs = currentTime - lastUpdate;
-        updateTimeSpent(activeDomain, timeSpentMs);
-        lastUpdate = currentTime;
-    }
-
-    handleAudibleTabs();
-}, 60000);
+    handleTabs(); // Track all tabs, including audible ones
+}, 1000); // Update every second
