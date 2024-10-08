@@ -17,7 +17,6 @@ function updatePopup() {
             listItem.textContent = 'No time recorded yet.';
             timeList.appendChild(listItem);
         } else {
-            // Sort domains by total time spent
             const domains = Object.keys(totalTime).sort((a, b) => totalTime[b] - totalTime[a]);
             for (const domain of domains) {
                 const totalSpentMs = totalTime[domain];
@@ -33,7 +32,6 @@ function updatePopup() {
     });
 }
 
-// Function to format time as hours, minutes, and seconds
 function formatTime(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -42,10 +40,8 @@ function formatTime(ms) {
     return `${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Update the popup when it's opened
 document.addEventListener('DOMContentLoaded', () => {
     updatePopup();
 
-    // Ensure the time is updated in real-time every second while the popup is open
     setInterval(updatePopup, 1000);
 });
